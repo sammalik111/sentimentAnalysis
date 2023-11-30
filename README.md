@@ -24,3 +24,4 @@ Clone the repository and install the required packages:
 git clone [repository-url]
 cd [repository-name]
 pip install praw tweepy google-api-python-client textblob
+

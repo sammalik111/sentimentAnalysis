@@ -1,12 +1,14 @@
 # API credentials for Reddit
-REDDIT_CLIENT_ID = "your_reddit_client_id"
-REDDIT_CLIENT_SECRET = "your_reddit_client_secret"
-REDDIT_USER_AGENT = "your_reddit_user_agent"
+REDDIT_CLIENT_ID = "7tcPzKPK9UuUKoCKfnqxmw"
+REDDIT_CLIENT_SECRET = "xekFE_8ae9uilz3rzcyN4kVkdlPR_g"
+REDDIT_USER_AGENT = "Beautiful-Drag679"
 
 # API credentials for Twitter
-TWITTER_API_KEY = "your_twitter_api_key"
-TWITTER_API_SECRET_KEY = "your_twitter_api_secret_key"
-TWITTER_BEARER_TOKEN = "your_twitter_bearer_token"
+TWITTER_API_KEY = "1V7nRKFIRudKMgPLEdyMgqsAx"
+TWITTER_API_SECRET_KEY = "Txj2fgpOzRL19EljTrE5U97Lvqpe3vyw4maSqgPmoKJcr42FHq"
+TWITTER_BEARER_TOKEN = "AAAAAAAAAAAAAAAAAAAAAFsarQEAAAAAgi4M3zBK5XzLTHRzVB1h3keZ%2F4M%3D0XtLNTsjXzl67wN6aLULiG6JrnxXbLk4N6oZP3rNluOQmi6SfE"
+TWITTER_ACCESS_TOKEN = "1730028224045084672-oO3aZKdORfafFGh0zJxyFLRrcCoGhq"
+TWITTER_ACCESS_TOKEN_SECRET = "oieeAGCdX82b0tvqcSh3VdxjLJWmeWCJU1j66GkCHvfz0"
 
 # API credentials for YouTube
-YOUTUBE_API_KEY = "your_youtube_api_key"
+YOUTUBE_API_KEY = "AIzaSyAvN-JwdYrWuj2ReBZ7IpqEVlZi4tRKSTs"
