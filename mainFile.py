@@ -3,17 +3,22 @@ import visualize
 
 def calculate_sentiments_and_times(data):
     # Function to extract sentiment scores and corresponding times from data
-    sentiments = []  # List to store individual sentiments
-    times = []  # List to store times of sentiments
+    sentiment_time_pairs = []  # List to store pairs of sentiments and times
 
     for item in data:
-        sentiments.append(item['comments_sentiment'])  # Append sentiment score
-        times.append(item['date'])  # Append times of each comment
-    
-    return sentiments, times
+        sentiment_time_pairs.append((item['comments_sentiment'], item['date']))
+
+    # Sort the pairs by time
+    sentiment_time_pairs.sort(key=lambda pair: pair[1])
+
+    # Unzip the pairs into separate lists
+    sentiments, times = zip(*sentiment_time_pairs)
+
+    return list(sentiments), list(times)
+
 
 def main():
-    topics = ['kanye', 'kittens', 'Murder']
+    topics = ['Palestine', 'Israel', 'Free food']
 
     dataForTopics = []
 
@@ -49,7 +54,7 @@ def main():
 
     # Visualize the gathered data
     visualize.main(dataSentiments, topics)
-    print("done")
+    # print("done")
 
 if __name__ == "__main__":
     main()

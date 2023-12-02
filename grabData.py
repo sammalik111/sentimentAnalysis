@@ -19,15 +19,15 @@ youtube = googleapiclient.discovery.build('youtube', 'v3', developerKey=config.Y
 
 # Function to perform sentiment analysis
 def sentiment_analysis(text):
-    analysis = TextBlob(text)
+    analysis = TextBlob(text)  
     # Map sentiment score from -1 to 1 to a 0-100 scale
-    sentiment_score = ((analysis.sentiment.polarity + 1) / 2) * 100
+    sentiment_score = (analysis.sentiment.polarity)
     return sentiment_score
 
 # Function to fetch and analyze data from Reddit
 def fetch_reddit_data(topic):
     posts = []
-    for submission in reddit.subreddit("all").search(topic, limit=10):
+    for submission in reddit.subreddit("all").search(topic, limit=20):
         post_data = {
             'title': submission.title,
             'upvotes': submission.score,
@@ -39,7 +39,7 @@ def fetch_reddit_data(topic):
         
         # Analyze sentiment of the first 100 comments
         submission.comments.replace_more(limit=0)  # Ensure all comments are loaded
-        comment_sentiments = [sentiment_analysis(comment.body) for comment in submission.comments[:100]]
+        comment_sentiments = [sentiment_analysis(comment.body) for comment in submission.comments[:20]]
         post_data['comments_sentiment'] = sum(comment_sentiments) / max(len(comment_sentiments), 1)
         
         posts.append(post_data)
@@ -48,7 +48,7 @@ def fetch_reddit_data(topic):
 # Function to fetch and analyze data from YouTube
 def fetch_youtube_data(topic):
     videos = []
-    request = youtube.search().list(q=topic, part="snippet", type="video", maxResults=10)
+    request = youtube.search().list(q=topic, part="snippet", type="video", maxResults=20)
     response = request.execute()
 
     for item in response['items']:
@@ -71,7 +71,7 @@ def fetch_youtube_data(topic):
                 part="snippet",
                 videoId=video_id,
                 textFormat="plainText",
-                maxResults=100  # Adjustable number of comments
+                maxResults=20  # Adjustable number of comments
             ).execute()
 
             # Check if comments are fetched successfully
@@ -105,7 +105,6 @@ def fetch_twitter_data(topic):
             'text': tweet.text,
             'favorites': tweet.public_metrics['like_count'],
             'date': str(tweet.created_at),
-            # ... other data fields
         }
         tweets.append(tweet_data)
     
