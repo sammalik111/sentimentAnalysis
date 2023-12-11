@@ -5,17 +5,14 @@ from textblob import TextBlob
 import config  # Importing the config file
 import datetime
 
-
 # Initialize API clients using credentials from config.py
 reddit = praw.Reddit(client_id=config.REDDIT_CLIENT_ID,
                      client_secret=config.REDDIT_CLIENT_SECRET,
                      user_agent=config.REDDIT_USER_AGENT)
 
-# Initialize Twitter API v2 client with Bearer Token
-auth = tweepy.AppAuthHandler(config.TWITTER_API_KEY, config.TWITTER_API_SECRET_KEY)
-client = tweepy.Client(auth)
 
 youtube = googleapiclient.discovery.build('youtube', 'v3', developerKey=config.YOUTUBE_API_KEY)
+
 
 # Function to perform sentiment analysis
 def sentiment_analysis(text):
@@ -89,31 +86,10 @@ def fetch_youtube_data(topic):
     return videos
 
 
-# Function to fetch and analyze data from Twitter
-def fetch_twitter_data(topic):
-    tweets = []
-    query = f'{topic} lang:en -is:retweet'
-    
-    # Define the maximum number of tweets to fetch
-    max_tweets = 10
-    
-    # Fetch tweets using Twitter API v2
-    search_results = client.search_recent_tweets(query, max_results=max_tweets)
-    
-    for tweet in search_results:
-        tweet_data = {
-            'text': tweet.text,
-            'favorites': tweet.public_metrics['like_count'],
-            'date': str(tweet.created_at),
-        }
-        tweets.append(tweet_data)
-    
-    return tweets
 
 def main(topicName):
     topic = topicName
     reddit_data = fetch_reddit_data(topic)
-    # twitter_data = fetch_twitter_data(topic)
     youtube_data = fetch_youtube_data(topic)
     dataForthisTopic = [reddit_data, youtube_data]
     return dataForthisTopic

@@ -47,7 +47,7 @@ def main():
             'reddit_sentiments': reddit_sentiments,
             'youtube_sentiments': youtube_sentiments,
             'reddit_times': reddit_sentiment_times,
-            'youtube_times': youtube_sentiment_times, 
+            'youtube_times': youtube_sentiment_times,
             'reddit_sentiment_average': reddit_sentiment_average,
             'youtube_sentiment_average': youtube_sentiment_average,
         })

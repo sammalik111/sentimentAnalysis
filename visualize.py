@@ -65,6 +65,7 @@ def main(dataSentiments, topics):
             TimePlot(youtube_times, youtube_data, f'YouTube Sentiments Over Time for {topic}')
             # histPlot(youtube_data, 'red', f'YouTube Sentiment Distribution for {topic}')
 
+
     # Plot Average Sentiments Bar Chart
     reddit_avg_scores = [data['reddit_sentiment_average'] for data in dataSentiments]
     youtube_avg_scores = [data['youtube_sentiment_average'] for data in dataSentiments]
