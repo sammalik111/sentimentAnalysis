@@ -4,6 +4,7 @@ import googleapiclient.discovery
 from textblob import TextBlob
 import config  # Importing the config file
 import datetime
+import requests
 
 # Initialize API clients using credentials from config.py
 reddit = praw.Reddit(client_id=config.REDDIT_CLIENT_ID,
@@ -85,11 +86,64 @@ def fetch_youtube_data(topic):
         videos.append(video_data)
     return videos
 
+def fetch_twitter_data(topic):
+    base_url = "https://api.twitter.com/2/tweets/search/recent"
+    headers = {
+        "Authorization": f"Bearer {config.TWITTER_BEARER_TOKEN}",
+    }
+    params = {
+        "query": topic,
+        "tweet.fields": "text,created_at",
+        "max_results": 20,
+    }
 
+    try:
+        response = requests.get(base_url, headers=headers, params=params)
+
+        if response.status_code == 200:
+            data = response.json()
+            tweets = []
+
+            for tweet in data.get("data", []):
+                tweet_data = {
+                    'text': tweet["text"],
+                    'date': datetime.datetime.fromisoformat(tweet["created_at"]).strftime('%Y-%m-%d %H:%M:%S'),
+                    'sentiment': sentiment_analysis(tweet["text"]),  
+                    'comments_sentiment': 0,  # Default value
+                }
+                # Fetch mentions of this tweet by its ID
+                tweet_id = tweet["id"]
+                mentions_url = f"https://api.twitter.com/2/tweets/{tweet_id}/mentions"
+                mentions_response = requests.get(mentions_url, headers=headers, params={"max_results": 20})
+
+                if mentions_response.status_code == 200:
+                    mentions_data = mentions_response.json()
+                    reply_sum = 0
+                    reply_count = len(mentions_data.get("data", []))
+                    
+                    for mention in mentions_data.get("data", []):
+                        reply_sum += sentiment_analysis(mention["text"])
+                    
+                    if reply_count > 0:
+                        tweet_data['comments_sentiment'] = reply_sum / reply_count
+
+                tweets.append(tweet_data)
+
+            return tweets
+        else:
+            print(f"Request failed with status code {response.status_code}: {response.text}")
+            return []
+
+    except Exception as e:
+        print(f"An error occurred: {str(e)}")
+        return []
+    
 
 def main(topicName):
     topic = topicName
+    twitter_data = fetch_twitter_data(topic)
     reddit_data = fetch_reddit_data(topic)
     youtube_data = fetch_youtube_data(topic)
-    dataForthisTopic = [reddit_data, youtube_data]
+    
+    dataForthisTopic = [reddit_data, youtube_data, twitter_data]
     return dataForthisTopic
