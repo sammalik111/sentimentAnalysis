@@ -3,7 +3,13 @@ import matplotlib.dates as mdates
 from datetime import datetime
 import numpy as np
 
+import numpy as np
+
 def amplify_variation(scores, base=10):
+    # Check if all scores are zeros
+    if all(score == 0 for score in scores):
+        return [0] * len(scores)  # Return a list of zeros
+
     # Normalize scores to range -1 to 1
     min_score, max_score = min(scores), max(scores)
     normalized_scores = [(2 * (score - min_score) / (max_score - min_score) - 1) for score in scores]
