@@ -56,6 +56,7 @@ def fetch_youtube_data(topic):
 
         video_data = {
             'title': item['snippet']['title'],
+            'upvotes': 0, 
             'date': formatted_date,
             'sentiment': sentiment_analysis(item['snippet']['title']),
             'comments_sentiment': 0,  # Default value
@@ -86,6 +87,27 @@ def fetch_youtube_data(topic):
         videos.append(video_data)
     return videos
 
+
+def calculate_comments_sentiment(tweet_data):
+    sentiment = tweet_data['sentiment']
+    upvotes = tweet_data['public_metrics']['like_count']
+    reply_count = tweet_data['public_metrics']['reply_count']
+    possibly_sensitive = tweet_data.get('possibly_sensitive', False)
+    withheld = tweet_data.get('withheld', False)
+
+    # Adjusting the formula to handle cases where likes and replies might be zero
+    # Adding a small constant (e.g., 1) to avoid division by zero and to ensure some weight is given to sentiment
+    comments_sentiment = sentiment * (upvotes + 1) * (reply_count + 1)
+    
+    # Adjust the comments_sentiment based on sensitivity and withholding
+    if possibly_sensitive:
+        comments_sentiment *= 0.9  # Reduces sentiment for sensitive content
+    if withheld:
+        comments_sentiment *= 0.8  # Further reduces sentiment for withheld content
+
+    return comments_sentiment
+
+
 def fetch_twitter_data(topic):
     base_url = "https://api.twitter.com/2/tweets/search/recent"
     headers = {
@@ -93,8 +115,10 @@ def fetch_twitter_data(topic):
     }
     params = {
         "query": topic,
-        "tweet.fields": "text,created_at",
-        "max_results": 20,
+        "tweet.fields": "text,created_at,public_metrics,possibly_sensitive",
+        "expansions": "author_id",
+        "user.fields": "public_metrics",  # If you need user metrics
+        "max_results": 100,
     }
 
     try:
@@ -103,32 +127,32 @@ def fetch_twitter_data(topic):
         if response.status_code == 200:
             data = response.json()
             tweets = []
+            scores = []
 
             for tweet in data.get("data", []):
                 tweet_data = {
                     'text': tweet["text"],
+                    'upvotes': tweet["public_metrics"]["like_count"],
                     'date': datetime.datetime.fromisoformat(tweet["created_at"]).strftime('%Y-%m-%d %H:%M:%S'),
                     'sentiment': sentiment_analysis(tweet["text"]),  
-                    'comments_sentiment': 0,  # Default value
+                    'public_metrics': tweet.get('public_metrics', {}),
+                    'possibly_sensitive': tweet.get('possibly_sensitive', False),
+                    'withheld': tweet.get('withheld', False),
+                    'comments_sentiment': 0,  # Placeholder for now
                 }
-                # Fetch mentions of this tweet by its ID
-                tweet_id = tweet["id"]
-                mentions_url = f"https://api.twitter.com/2/tweets/{tweet_id}/mentions"
-                mentions_response = requests.get(mentions_url, headers=headers, params={"max_results": 20})
+                tweet_data['comments_sentiment'] = calculate_comments_sentiment(tweet_data)
+                if tweet_data['comments_sentiment'] != 0:
+                    tweets.append(tweet_data)
 
-                if mentions_response.status_code == 200:
-                    mentions_data = mentions_response.json()
-                    reply_sum = 0
-                    reply_count = len(mentions_data.get("data", []))
-                    
-                    for mention in mentions_data.get("data", []):
-                        reply_sum += sentiment_analysis(mention["text"])
-                    
-                    if reply_count > 0:
-                        tweet_data['comments_sentiment'] = reply_sum / reply_count
-
-                tweets.append(tweet_data)
-
+            # sort tweets by timestamp with oldest being first
+            tweets.sort(key=lambda tweet: tweet['date'])
+            
+            # Calculate comments sentiment for each tweet
+            for tweet in tweets:
+                tweet['comments_sentiment'] = calculate_comments_sentiment(tweet)
+                scores.append(tweet['comments_sentiment'])
+                
+            print(scores)    
             return tweets
         else:
             print(f"Request failed with status code {response.status_code}: {response.text}")
@@ -147,3 +171,5 @@ def main(topicName):
     
     dataForthisTopic = [reddit_data, youtube_data, twitter_data]
     return dataForthisTopic
+
+
