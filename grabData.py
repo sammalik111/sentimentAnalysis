@@ -43,6 +43,7 @@ def fetch_reddit_data(topic):
         posts.append(post_data)
     return posts
 
+
 # Function to fetch and analyze data from YouTube
 def fetch_youtube_data(topic):
     videos = []
@@ -54,17 +55,29 @@ def fetch_youtube_data(topic):
         youtube_date = item['snippet'].get('publishedAt', 'Unknown date')
         formatted_date = datetime.datetime.fromisoformat(youtube_date.rstrip('Z')).strftime('%Y-%m-%d %H:%M:%S')
 
-        video_data = {
-            'title': item['snippet']['title'],
-            'upvotes': 0, 
-            'date': formatted_date,
-            'sentiment': sentiment_analysis(item['snippet']['title']),
-            'comments_sentiment': 0,  # Default value
-        }
-        
         video_id = item['id']['videoId']
 
         try:
+            # Fetch video statistics to get the number of likes
+            video_stats_response = youtube.videos().list(
+                part="statistics",
+                id=video_id
+            ).execute()
+
+            # Check if video statistics are fetched successfully
+            if 'items' in video_stats_response and video_stats_response['items']:
+                likes = int(video_stats_response['items'][0]['statistics'].get('likeCount', '0'))
+            else:
+                likes = 0
+
+            video_data = {
+                'title': item['snippet']['title'],
+                'upvotes': likes,  # Set upvotes count to likes
+                'date': formatted_date,
+                'sentiment': sentiment_analysis(item['snippet']['title']),
+                'comments_sentiment': 0,  # Default value
+            }
+
             # Attempt to fetch comments for the video
             comments_response = youtube.commentThreads().list(
                 part="snippet",
@@ -75,16 +88,19 @@ def fetch_youtube_data(topic):
 
             # Check if comments are fetched successfully
             if 'items' in comments_response and comments_response['items']:
-                # Create a list of sentiment scores for each comments
+                # Create a list of sentiment scores for each comment
                 comment_sentiments = [sentiment_analysis(comment['snippet']['topLevelComment']['snippet']['textDisplay']) for comment in comments_response['items']]
                 if comment_sentiments:
                     video_data['comments_sentiment'] = sum(comment_sentiments) / len(comment_sentiments)
+            
+            if video_data['comments_sentiment'] != 0:
+                videos.append(video_data)
 
         except Exception as e:
             # Handle exceptions (e.g., comments are disabled)
-            print(f"Error fetching comments for video {video_id}: {e}")
+            print(f"Error fetching data for video {video_id}: {e}")
 
-        videos.append(video_data)
+        
     return videos
 
 
@@ -127,7 +143,6 @@ def fetch_twitter_data(topic):
         if response.status_code == 200:
             data = response.json()
             tweets = []
-            scores = []
 
             for tweet in data.get("data", []):
                 tweet_data = {
@@ -150,9 +165,7 @@ def fetch_twitter_data(topic):
             # Calculate comments sentiment for each tweet
             for tweet in tweets:
                 tweet['comments_sentiment'] = calculate_comments_sentiment(tweet)
-                scores.append(tweet['comments_sentiment'])
-                
-            print(scores)    
+ 
             return tweets
         else:
             print(f"Request failed with status code {response.status_code}: {response.text}")

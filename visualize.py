@@ -3,8 +3,6 @@ import matplotlib.dates as mdates
 from datetime import datetime
 import numpy as np
 
-import numpy as np
-
 def amplify_variation(scores, base=10):
     # Check if all scores are zeros
     if all(score == 0 for score in scores):
@@ -12,11 +10,27 @@ def amplify_variation(scores, base=10):
 
     # Normalize scores to range -1 to 1
     min_score, max_score = min(scores), max(scores)
-    normalized_scores = [(2 * (score - min_score) / (max_score - min_score) - 1) for score in scores]
     
-    # Apply logarithmic transformation
-    amplified_scores = [np.log(score + 1) / np.log(base + 1) * 100 for score in normalized_scores]    
+    normalized_scores = []
+    for score in scores:
+        numerator = 2 * (score - min_score)
+        denominator = (max_score - min_score)
+        if denominator == 0:
+            normalized_scores.append(-1)
+        else:
+            normalized_scores.append( (numerator / denominator) - 1)
+            
+    
+    # Apply logarithmic transformation with handling for -1
+    amplified_scores = []
+    for score in normalized_scores:
+        if score == -1:
+            amplified_scores.append(0)
+        else:
+            amplified_scores.append(np.log(score + 1) / np.log(base + 1) * 100)
+    
     return amplified_scores
+
 
 
 def TimePlot(dates, scores, title):

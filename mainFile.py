@@ -18,7 +18,7 @@ def calculate_sentiments_and_times(data):
 
 
 def main():
-    topics = ['Trump', 'Kanye', 'Scooby Doo']
+    topics = ['Trump', 'Kanye', 'Bitcoin']
 
     dataForTopics = []
 
