@@ -25,7 +25,7 @@ def sentiment_analysis(text):
 # Function to fetch and analyze data from Reddit
 def fetch_reddit_data(topic):
     posts = []
-    for submission in reddit.subreddit("all").search(topic, limit=20):
+    for submission in reddit.subreddit("all").search(topic, limit=10):
         post_data = {
             'title': submission.title,
             'upvotes': submission.score,
@@ -47,7 +47,7 @@ def fetch_reddit_data(topic):
 # Function to fetch and analyze data from YouTube
 def fetch_youtube_data(topic):
     videos = []
-    request = youtube.search().list(q=topic, part="snippet", type="video", maxResults=20)
+    request = youtube.search().list(q=topic, part="snippet", type="video", maxResults=10)
     response = request.execute()
 
     for item in response['items']:
@@ -100,7 +100,8 @@ def fetch_youtube_data(topic):
             # Handle exceptions (e.g., comments are disabled)
             print(f"Error fetching data for video {video_id}: {e}")
 
-        
+    # limit the number of videos to 5
+    videos = videos[:5]
     return videos
 
 
