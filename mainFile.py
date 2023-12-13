@@ -1,5 +1,6 @@
 import grabData
 import visualize
+import databaseMaker
 
 def calculate_sentiments_and_times(data):
     # Function to extract sentiment scores and corresponding times from data
@@ -26,12 +27,17 @@ def main():
     for topic in topics:
         dataForEachTopic = grabData.main(topic)  # Fetch data from Reddit and YouTube
         dataForTopics.append(dataForEachTopic)
+        
+    databaseMaker.main(topics, dataForTopics)  # Store data in a database
 
     dataSentiments = []  # List to store sentiment data for all topics
 
     # Process each topic's data
-    for i, topic_data in enumerate(dataForTopics, start=1):
-        reddit_data, youtube_data, twitter_data = topic_data
+    for topic in topics:
+        
+        reddit_data = databaseMaker.fetch_data_from_database(topic, 'reddit')
+        youtube_data = databaseMaker.fetch_data_from_database(topic, 'youtube')
+        twitter_data = databaseMaker.fetch_data_from_database(topic, 'twitter')
 
         # Calculate sentiments and times for Reddit and YouTube data
         reddit_sentiments, reddit_sentiment_times = calculate_sentiments_and_times(reddit_data)
@@ -45,7 +51,7 @@ def main():
 
         # Aggregate sentiment data and times for visualization
         dataSentiments.append({
-            'topic': topics[i - 1],
+            'topic': topic,
             'reddit_sentiments': reddit_sentiments,
             'reddit_sentiment_average': reddit_sentiment_average,
             'reddit_times': reddit_sentiment_times,

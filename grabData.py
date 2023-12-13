@@ -146,7 +146,7 @@ def fetch_twitter_data(topic):
 
             for tweet in data.get("data", []):
                 tweet_data = {
-                    'text': tweet["text"],
+                    'title': tweet["text"],
                     'upvotes': tweet["public_metrics"]["like_count"],
                     'date': datetime.datetime.fromisoformat(tweet["created_at"]).strftime('%Y-%m-%d %H:%M:%S'),
                     'sentiment': sentiment_analysis(tweet["text"]),  
