@@ -3,6 +3,15 @@ import matplotlib.dates as mdates
 from datetime import datetime
 import numpy as np
 
+def save_data_to_text_file(filename, dataType, api, topic, data):
+    with open(filename, 'a') as file:  # Use 'a' mode to append data
+        # Add information about the API and topic at the beginning of the file
+        file.write(f"{dataType} for {topic} using {api}\n")
+
+        for item in data:
+            file.write(f"{item}\n")
+        file.write(f"------------\n")
+
 def amplify_variation(scores, base=10):
     # Check if all scores are zeros
     if all(score == 0 for score in scores):
@@ -10,7 +19,7 @@ def amplify_variation(scores, base=10):
 
     # Normalize scores to range -1 to 1
     min_score, max_score = min(scores), max(scores)
-    
+
     normalized_scores = []
     for score in scores:
         numerator = 2 * (score - min_score)
@@ -18,9 +27,8 @@ def amplify_variation(scores, base=10):
         if denominator == 0:
             normalized_scores.append(-1)
         else:
-            normalized_scores.append( (numerator / denominator) - 1)
-            
-    
+            normalized_scores.append((numerator / denominator) - 1)
+
     # Apply logarithmic transformation with handling for -1
     amplified_scores = []
     for score in normalized_scores:
@@ -28,12 +36,10 @@ def amplify_variation(scores, base=10):
             amplified_scores.append(0)
         else:
             amplified_scores.append(np.log(score + 1) / np.log(base + 1) * 100)
-    
+
     return amplified_scores
 
-
-
-def TimePlot(dates, scores, title):
+def TimePlot(dates, scores, title, save_to_file=None, api=None, topic=None):
     # Convert string dates to datetime objects
     dates = [datetime.strptime(date, '%Y-%m-%d %H:%M:%S') for date in dates]
 
@@ -50,22 +56,29 @@ def TimePlot(dates, scores, title):
     plt.tight_layout()
     plt.show()
 
+    if save_to_file:
+        save_data_to_text_file(save_to_file + '.txt', 'sentiments', api, topic, amplified_scores)  # Append data to a text file
 
-def histPlot(scores, color, title):
-    plt.figure(figsize=(8, 6))
-    plt.hist(scores, bins=20, color=color, edgecolor='black', alpha=0.7)
-    plt.xlabel('Sentiment Score')
-    plt.ylabel('Frequency')
-    plt.title(title)
-    plt.show()
+def barPlot(topics, avg_sentiments, title, save_to_file=None, api=None, topic=None):
+    colors = ['red', 'blue', 'green', 'orange', 'purple']
+    color_indices = np.arange(len(topics)) % len(colors)
 
-def barPlot(topics, avg_sentiments, title):
+    avg_sentiments = amplify_variation(avg_sentiments)
+
     plt.figure(figsize=(8, 6))
-    plt.bar(topics, avg_sentiments, color='green')
+    # Plot each bar with a different color
+    for i, (topic, sentiment) in enumerate(zip(topics, avg_sentiments)):
+        color_index = color_indices[i]
+        plt.bar(topic, sentiment, color=colors[color_index])
     plt.xlabel('Topics')
     plt.ylabel('Average Sentiment Score')
     plt.title(title)
+    legend_labels = [plt.Rectangle((0, 0), 1, 1, color=colors[i]) for i in range(len(topics))]  # Create a legend with the colors
+    plt.legend(legend_labels, topics)
     plt.show()
+
+    if save_to_file:
+        save_data_to_text_file(save_to_file + '.txt', 'averages', api, topic, avg_sentiments)  # Append data to a text file
 
 def main(dataSentiments, topics):
     for i, topic in enumerate(topics):
@@ -74,32 +87,27 @@ def main(dataSentiments, topics):
         reddit_times = dataSentiments[i]['reddit_times']
 
         if reddit_data:
-            TimePlot(reddit_times, reddit_data, f'Reddit Sentiments Over Time for {topic}')
-            # histPlot(reddit_data, 'blue', f'Reddit Sentiment Distribution for {topic}')
-        
+            TimePlot(reddit_times, reddit_data, f'Reddit Sentiments Over Time for {topic}', save_to_file='output', api='Reddit API', topic=topic)
+
         # YouTube Data Visualization
         youtube_data = dataSentiments[i]['youtube_sentiments']
         youtube_times = dataSentiments[i]['youtube_times']
 
         if youtube_data:
-            TimePlot(youtube_times, youtube_data, f'YouTube Sentiments Over Time for {topic}')
-            # histPlot(youtube_data, 'red', f'YouTube Sentiment Distribution for {topic}')
-            
-            
+            TimePlot(youtube_times, youtube_data, f'YouTube Sentiments Over Time for {topic}', save_to_file='output', api='YouTube API', topic=topic)
+
         # Twitter Data Visualization
         twitter_data = dataSentiments[i]['twitter_sentiments']
         twitter_times = dataSentiments[i]['twitter_times']
 
         if twitter_data:
-            TimePlot(twitter_times, twitter_data, f'Twitter Sentiments Over Time for {topic}')
-            # histPlot(youtube_data, 'red', f'YouTube Sentiment Distribution for {topic}')
-
+            TimePlot(twitter_times, twitter_data, f'Twitter Sentiments Over Time for {topic}', save_to_file='output', api='Twitter API', topic=topic)
 
     # Plot Average Sentiments Bar Chart
     reddit_avg_scores = [data['reddit_sentiment_average'] for data in dataSentiments]
     youtube_avg_scores = [data['youtube_sentiment_average'] for data in dataSentiments]
     twitter_avg_scores = [data['twitter_sentiment_average'] for data in dataSentiments]
 
-    barPlot(topics, reddit_avg_scores, 'Average Reddit Sentiment Scores by Topic')
-    barPlot(topics, youtube_avg_scores, 'Average YouTube Sentiment Scores by Topic')
-    barPlot(topics, twitter_avg_scores, 'Average Twitter Sentiment Scores by Topic')
+    barPlot(topics, reddit_avg_scores, 'Average Reddit Sentiment Scores by Topic', save_to_file='output', api='Reddit API', topic='Average')
+    barPlot(topics, youtube_avg_scores, 'Average YouTube Sentiment Scores by Topic', save_to_file='output', api='YouTube API', topic='Average')
+    barPlot(topics, twitter_avg_scores, 'Average Twitter Sentiment Scores by Topic', save_to_file='output', api='Twitter API', topic='Average')

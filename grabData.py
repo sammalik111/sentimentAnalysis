@@ -134,7 +134,7 @@ def fetch_twitter_data(topic):
         "tweet.fields": "text,created_at,public_metrics,possibly_sensitive",
         "expansions": "author_id",
         "user.fields": "public_metrics",  # If you need user metrics
-        "max_results": 100,
+        "max_results": 50,
     }
 
     try:
