@@ -7,7 +7,6 @@ def save_data_to_text_file(filename, dataType, api, topic, data):
     with open(filename, 'a') as file:  # Use 'a' mode to append data
         # Add information about the API and topic at the beginning of the file
         file.write(f"{dataType} for {topic} using {api}\n")
-
         for item in data:
             file.write(f"{item}\n")
         file.write(f"------------\n")
@@ -54,6 +53,8 @@ def TimePlot(dates, scores, title, save_to_file=None, api=None, topic=None):
     plt.title(title)
     plt.xticks(rotation=45)
     plt.tight_layout()
+    if save_to_file:
+        plt.savefig(f'outputGraphs/{api}{topic}_TimePlot.png')  # Save the graph as an image
     plt.show()
 
     if save_to_file:
@@ -75,6 +76,9 @@ def barPlot(topics, avg_sentiments, title, save_to_file=None, api=None, topic=No
     plt.title(title)
     legend_labels = [plt.Rectangle((0, 0), 1, 1, color=colors[i]) for i in range(len(topics))]  # Create a legend with the colors
     plt.legend(legend_labels, topics)
+    plt.tight_layout()
+    if save_to_file:
+        plt.savefig(f'outputGraphs/{api}{topic}_BarPlot.png')  # Save the graph as an image
     plt.show()
 
     if save_to_file:
